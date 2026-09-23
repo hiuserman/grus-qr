@@ -9,8 +9,8 @@
     :root { color-scheme: dark; --green: #8fffb0; --muted: #658a70; --line: #254332; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100svh; padding: clamp(20px, 5vw, 64px); background: #060b08; color: var(--green); font: 14px/1.9 "Courier New", monospace; }
-    body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: repeating-linear-gradient(transparent 0 3px, #0002 3px 4px); opacity: .45; }
-    main { width: min(100%, 760px); margin: 5vh auto 0; }
+    body::before { content: ""; position: fixed; inset: 0; z-index: 2; pointer-events: none; background: repeating-linear-gradient(transparent 0 3px, #8fffb025 3px 4px); opacity: .55; animation: scan-drift 2.7s steps(1) infinite; }
+    main { width: min(100%, 760px); margin: 5vh auto 0; animation: idle-drift 3.7s steps(1) infinite; }
     header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
     .brand { font-weight: bold; letter-spacing: .28em; font-size: 18px; }
     .small { color: var(--muted); font-size: 10px; letter-spacing: .13em; }
@@ -20,7 +20,9 @@
     h1 { margin: 6px 0; font-size: clamp(20px, 5vw, 28px); font-weight: normal; letter-spacing: .12em; }
     .identity { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; border: 1px solid var(--line); padding: 18px 20px; background: #0a140e; }
     .id { font-size: 18px; letter-spacing: .04em; }
-    #status { border: 1px solid var(--line); padding: 3px 10px; font-size: 11px; }
+    #status, #visitor-status { border: 1px solid var(--line); padding: 3px 10px; font-size: 11px; }
+    #visitor { margin: 0 0 30px; }
+    #visitor .id { font-size: 15px; }
     .terminal { height: 310px; overflow-y: auto; padding: 28px 0 18px; scrollbar-width: thin; scrollbar-color: #593030 transparent; }
     .terminal.flood .row { margin-bottom: 3px; font-size: 12px; line-height: 1.6; }
     .terminal.flood .number { color: #b65a62; }
@@ -40,7 +42,29 @@
     button:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
     [hidden] { display: none !important; }
     @keyframes blink { 50% { opacity: 0; } }
-    @media (prefers-reduced-motion: reduce) { *, *::after { animation: none !important; } }
+    @keyframes idle-drift {
+      0%, 19%, 42%, 74%, 100% { transform: translate(0); }
+      17%, 71% { transform: translateX(-1px); }
+      39% { transform: translate(1px, .5px); }
+      91% { transform: translateY(-.5px); }
+    }
+    body.alarm { --green: #ff5365; --muted: #c76b75; --line: #73313c; color: #ff5365; }
+    body.glitch main { text-shadow: 2px 0 #ff203870, -2px 0 #ff9a9a50; animation: signal-drift .83s steps(1) infinite; }
+    body.alarm .identity { background: #190c10; }
+    body.alarm .dot { box-shadow: 0 0 8px #ff536560; }
+    body.alarm::before { background: repeating-linear-gradient(transparent 0 3px, #9e162126 3px 4px); opacity: .65; }
+    body.glitch::before { animation: scan-break .47s steps(1) infinite; }
+    body.glitch .terminal { animation: signal-drift .61s steps(1) reverse infinite; }
+    @keyframes signal-drift {
+      0%, 24%, 53%, 88%, 100% { transform: translate(0); }
+      9% { transform: translate(-4px, 1px) skewX(-.45deg); }
+      16%, 71% { transform: translate(3px, -1px) skewX(.35deg); }
+      38% { transform: translate(-2px, -2px); }
+      61%, 83% { transform: translate(5px, 1px) skewX(-.2deg); }
+    }
+    @keyframes scan-drift { 0%, 100% { background-position: 0 0; } 31% { background-position: 0 1px; } 68% { background-position: 0 3px; } 84% { background-position: 0 2px; } }
+    @keyframes scan-break { 0%, 100% { background-position: 0 0; background-size: 100% 4px; } 17% { background-position: 0 13px; background-size: 100% 7px; } 43% { background-position: 0 -9px; background-size: 100% 3px; } 58% { background-position: 0 21px; background-size: 100% 6px; } 81% { background-position: 0 -4px; background-size: 100% 5px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
     @media (max-width: 420px) { .connection .small { letter-spacing: 0; } .identity { padding: 14px; } main { margin-top: 2vh; } }
   </style>
 </head>
@@ -53,7 +77,12 @@
     <section class="intro"><div class="small">RESTRICTED ACCESS / 人員管理局</div><h1>社員証を照合しています</h1></section>
     <div class="identity"><div><div class="small">PERSONNEL ID</div><div class="id">Grus-47727573</div></div><div id="status" role="status">照合中</div></div>
     <div class="terminal" id="log" aria-label="認証ログ" aria-live="off"></div>
-    <section id="result" hidden aria-label="照合結果"><p class="retarget">照合対象を変更しました</p><p id="question"></p><div id="signature" class="signature" hidden aria-label="微笑み">:)</div></section>
+    <section id="result" hidden aria-label="照合結果">
+      <p class="retarget">照合対象を変更しました</p>
+      <div id="visitor" class="identity" hidden><div><div class="small">UNREGISTERED USER</div><div class="id">Definitely Human</div></div><div id="visitor-status" role="status">照合中</div></div>
+      <p id="question"></p>
+      <div id="signature" class="signature" hidden aria-label="微笑み">:)</div>
+    </section>
     <footer><span id="connection-message" class="small" role="status">GRUS / VIRTUAL PERSONNEL ARCHIVE</span><button id="action" type="button">演出をスキップ</button></footer>
   </main>
   <script>
@@ -81,6 +110,7 @@
     const questionSpeed = char => char === '.' ? 700 : char === '、' ? 850 : 320;
     const log = document.getElementById('log');
     const status = document.getElementById('status');
+    const visitor = document.getElementById('visitor');
     const result = document.getElementById('result');
     const questionNode = document.getElementById('question');
     const signature = document.getElementById('signature');
@@ -119,16 +149,19 @@
     function finish() {
       signature.hidden = false;
       complete = true;
-      status.textContent = '実在性：未確認';
+      status.textContent = 'アクセス拒否';
       status.classList.add('error');
       document.title = 'GRUS / 対象は仮想存在です';
       action.textContent = '再照合する';
     }
     function showAll() {
       generation++;
+      document.body.classList.remove('alarm');
+      document.body.classList.remove('glitch');
       log.replaceChildren();
       sequence.forEach((item, index) => { addRow(item, index).textContent = item.text; });
       log.hidden = true;
+      visitor.hidden = false;
       result.hidden = false;
       questionNode.classList.remove('typing');
       questionNode.textContent = question;
@@ -137,12 +170,15 @@
     }
     async function start() {
       const run = ++generation;
+      document.body.classList.remove('alarm');
+      document.body.classList.remove('glitch');
       complete = false;
       log.replaceChildren();
       log.hidden = false;
       log.classList.remove('flood');
       log.scrollTop = 0;
       result.hidden = true;
+      visitor.hidden = true;
       signature.hidden = true;
       connectionMessage.textContent = 'GRUS / VIRTUAL PERSONNEL ARCHIVE';
       questionNode.textContent = '';
@@ -161,6 +197,8 @@
       status.textContent = 'アクセス拒否';
       status.classList.add('error');
       log.classList.add('flood');
+      document.body.classList.add('alarm');
+      document.body.classList.add('glitch');
       for (let index = 0; index < 72; index++) {
         if (run !== generation) return;
         addRow({ text: '', error: true }, sequence.length + index).textContent = accessErrors[index % accessErrors.length];
@@ -168,15 +206,18 @@
         await sleep(index < 8 ? 160 : index < 24 ? 75 : 40);
       }
       if (run !== generation) return;
+      document.body.classList.remove('glitch');
       await sleep(1000);
       if (run !== generation) return;
       log.replaceChildren();
       await sleep(2500);
       if (run !== generation) return;
       log.hidden = true;
-      status.textContent = '再照合中';
-      status.classList.remove('error');
       result.hidden = false;
+      await sleep(4000);
+      if (run !== generation) return;
+      document.body.classList.remove('alarm');
+      visitor.hidden = false;
       await sleep(questionDelay);
       if (run !== generation) return;
       if (!await type(questionNode, question, questionSpeed, run)) return;
@@ -192,4 +233,3 @@
   </script>
 </body>
 </html>
-
